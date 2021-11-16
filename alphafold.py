@@ -68,6 +68,13 @@ def predict_structure(	fasta_path: str,
 		t_0 = time.time()
 		processed_feature_dict = model_runner.process_features(feature_dict, random_seed=random_seed)
 		timings[f'process_features_{model_name}'] = time.time() - t_0
+		
+		
+		proc_features_output_path = os.path.join(output_dir, 'proc_features.pkl')
+		with open(proc_features_output_path, 'wb') as f:
+			pickle.dump(processed_feature_dict, f, protocol=4)
+		with open(proc_features_output_path, 'rb') as f:
+			processed_feature_dict = pickle.load(f)
 
 		proc_features_output_path = os.path.join(output_dir, 'proc_features.pkl')
 		with open(proc_features_output_path, 'wb') as f:
@@ -77,6 +84,7 @@ def predict_structure(	fasta_path: str,
 
 		t_0 = time.time()
 		prediction_result, _ = model_runner.predict(processed_feature_dict)
+		sys.exit()
 		t_diff = time.time() - t_0
 		timings[f'predict_and_compile_{model_name}'] = t_diff
 		logging.info('Total JAX model %s predict time (includes compilation time, see --benchmark): %.0f?', model_name, t_diff)

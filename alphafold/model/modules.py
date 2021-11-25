@@ -30,6 +30,8 @@ from alphafold.model import utils
 import haiku as hk
 import jax
 import jax.numpy as jnp
+import os
+import sys
 
 
 def softmax_cross_entropy(logits, labels):
@@ -145,7 +147,7 @@ class AlphaFoldIteration(hk.Module):
                return_representations=False):
 
     num_ensemble = jnp.asarray(ensembled_batch['seq_length'].shape[0])
-
+    
     if not ensemble_representations:
       assert ensembled_batch['seq_length'].shape[0] == 1
 
@@ -308,7 +310,7 @@ class AlphaFold(hk.Module):
 
     impl = AlphaFoldIteration(self.config, self.global_config)
     batch_size, num_residues = batch['aatype'].shape
-
+    
     def get_prev(ret):
       new_prev = {
           'prev_pos':
@@ -371,7 +373,8 @@ class AlphaFold(hk.Module):
 
       def body(x):
         n, tol, prev = x
-        prev_ = get_prev(do_call(prev, recycle_idx=n, compute_loss=False))
+        ret = do_call(prev, recycle_idx=n, compute_loss=False)
+        prev_ = get_prev(ret)
         ca,ca_ = prev["prev_pos"][:,1,:], prev_["prev_pos"][:,1,:]
         tol_ = jnp.sqrt(jnp.square(pw_dist(ca) - pw_dist(ca_)).mean())
         return n+1, tol_, prev_
@@ -379,11 +382,11 @@ class AlphaFold(hk.Module):
       if hk.running_init():
         # When initializing the Haiku module, run one iteration of the
         # while_loop to initialize the Haiku modules used in `body`.
-        recycles, tol, prev = body((0, jnp.inf, prev))
+        recycles, tol, prev = body((0, jnp.inf, prev, None))
       else:
         recycles, tol, prev = hk.while_loop(
           lambda x: ((x[0] < num_iter) & (x[1] > self.config.recycle_tol)),
-          body,(0, jnp.inf, prev))
+          body,(0, jnp.inf, prev, None))
     else:
       prev = {}
       num_iter = 0
@@ -623,7 +626,7 @@ class Attention(hk.Module):
                               init=hk.initializers.Constant(0.0))
 
     output = jnp.einsum('bqhc,hco->bqo', weighted_avg, o_weights) + o_bias
-
+    
     return output
 
 
@@ -1691,13 +1694,14 @@ class EmbeddingsAndEvoformer(hk.Module):
     self.global_config = global_config
 
   def __call__(self, batch, is_training, safe_key=None):
-
+    
     c = self.config
     gc = self.global_config
 
     if safe_key is None:
       safe_key = prng.SafeKey(hk.next_rng_key())
-
+    
+            
     # Embed clustered MSA.
     # Jumper et al. (2021) Suppl. Alg. 2 "Inference" line 5
     # Jumper et al. (2021) Suppl. Alg. 3 "InputEmbedder"
@@ -1720,6 +1724,7 @@ class EmbeddingsAndEvoformer(hk.Module):
     pair_activations = left_single[:, None] + right_single[None]
     mask_2d = batch['seq_mask'][:, None] * batch['seq_mask'][None, :]
 
+
     # Inject previous outputs for recycling.
     # Jumper et al. (2021) Suppl. Alg. 2 "Inference" line 6
     # Jumper et al. (2021) Suppl. Alg. 32 "RecyclingEmbedder"
@@ -1727,9 +1732,10 @@ class EmbeddingsAndEvoformer(hk.Module):
       prev_pseudo_beta = pseudo_beta_fn(
           batch['aatype'], batch['prev_pos'], None)
       dgram = dgram_from_positions(prev_pseudo_beta, **self.config.prev_pos)
-      pair_activations += common_modules.Linear(
+      pair_act_p1 = common_modules.Linear(
           c.pair_channel, name='prev_pos_linear')(
               dgram)
+      pair_activations += pair_act_p1
 
     if c.recycle_features:
       if 'prev_msa_first_row' in batch:
@@ -1740,13 +1746,15 @@ class EmbeddingsAndEvoformer(hk.Module):
                                               batch['prev_msa_first_row'])
         msa_activations = jax.ops.index_add(msa_activations, 0,
                                             prev_msa_first_row)
-
+        
       if 'prev_pair' in batch:
-        pair_activations += hk.LayerNorm([-1],
-                                         True,
-                                         True,
-                                         name='prev_pair_norm')(
-                                             batch['prev_pair'])
+        prev_pair_lin = hk.LayerNorm([-1],
+                                    True,
+                                    True,
+                                    name='prev_pair_norm')(
+                                    batch['prev_pair'])
+        pair_activations += prev_pair_lin
+      
 
     # Relative position encoding.
     # Jumper et al. (2021) Suppl. Alg. 4 "relpos"

@@ -49,13 +49,13 @@ def predict_structure(	fasta_path: str,
 
 	# Get features.
 	t_0 = time.time()
-	feature_dict = data_pipeline.process(input_fasta_path=fasta_path, msa_output_dir=msa_output_dir)
+	# feature_dict = data_pipeline.process(input_fasta_path=fasta_path, msa_output_dir=msa_output_dir)
 	timings['features'] = time.time() - t_0
 
 	# Write out features as a pickled dictionary.
 	features_output_path = os.path.join(output_dir, 'features.pkl')
-	with open(features_output_path, 'wb') as f:
-		pickle.dump(feature_dict, f, protocol=4)
+	# with open(features_output_path, 'wb') as f:
+	# 	pickle.dump(feature_dict, f, protocol=4)
 	with open(features_output_path, 'rb') as f:
 		feature_dict = pickle.load(f)
 
@@ -66,25 +66,26 @@ def predict_structure(	fasta_path: str,
 	for model_name, model_runner in model_runners.items():
 		logging.info('Running model %s', model_name)
 		t_0 = time.time()
-		processed_feature_dict = model_runner.process_features(feature_dict, random_seed=random_seed)
+		# processed_feature_dict = model_runner.process_features(feature_dict, random_seed=random_seed)
 		timings[f'process_features_{model_name}'] = time.time() - t_0
 		
 		
 		proc_features_output_path = os.path.join(output_dir, 'proc_features.pkl')
-		with open(proc_features_output_path, 'wb') as f:
-			pickle.dump(processed_feature_dict, f, protocol=4)
-		with open(proc_features_output_path, 'rb') as f:
-			processed_feature_dict = pickle.load(f)
-
-		proc_features_output_path = os.path.join(output_dir, 'proc_features.pkl')
-		with open(proc_features_output_path, 'wb') as f:
-			pickle.dump(processed_feature_dict, f, protocol=4)
+		# with open(proc_features_output_path, 'wb') as f:
+		# 	pickle.dump(processed_feature_dict, f, protocol=4)
 		with open(proc_features_output_path, 'rb') as f:
 			processed_feature_dict = pickle.load(f)
 
 		t_0 = time.time()
-		prediction_result, _ = model_runner.predict(processed_feature_dict)
+		prediction_result, _, debug = model_runner.predict(processed_feature_dict)
+		print(prediction_result['debug'].keys())
 		sys.exit()
+		
+		prediction_result_path = os.path.join(output_dir, 'pred_result.pkl')
+		with open(prediction_result_path, 'wb') as f:
+			pickle.dump(prediction_result, f, protocol=4)
+		
+		
 		t_diff = time.time() - t_0
 		timings[f'predict_and_compile_{model_name}'] = t_diff
 		logging.info('Total JAX model %s predict time (includes compilation time, see --benchmark): %.0f?', model_name, t_diff)
@@ -148,14 +149,14 @@ def predict_structure(	fasta_path: str,
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Train deep protein docking')	
 	parser.add_argument('-fasta_path', default='T1024.fas', type=str)
-	parser.add_argument('-output_dir', default='/media/HDD/AlphaFold2Output', type=str)
+	parser.add_argument('-output_dir', default='/media/lupoglaz/AlphaFold2Output', type=str)
 	parser.add_argument('-model_name', default='model_1', type=str)
-	parser.add_argument('-data_dir', default='/media/HDD/AlphaFold2', type=str)
+	parser.add_argument('-data_dir', default='/media/lupoglaz/AlphaFold2Data', type=str)
 	
-	parser.add_argument('-jackhmmer_binary_path', default='/usr/bin/jackhmmer', type=str)
-	parser.add_argument('-hhblits_binary_path', default='/usr/bin/hhblits', type=str)
-	parser.add_argument('-hhsearch_binary_path', default='/usr/bin/hhsearch', type=str)
-	parser.add_argument('-kalign_binary_path', default='/usr/bin/kalign', type=str)
+	parser.add_argument('-jackhmmer_binary_path', default='jackhmmer', type=str)
+	parser.add_argument('-hhblits_binary_path', default='hhblits', type=str)
+	parser.add_argument('-hhsearch_binary_path', default='hhsearch', type=str)
+	parser.add_argument('-kalign_binary_path', default='kalign', type=str)
 
 	parser.add_argument('-uniref90_database_path', default='uniref90/uniref90.fasta', type=str)
 	parser.add_argument('-mgnify_database_path', default='mgnify/mgy_clusters_2018_12.fa', type=str)

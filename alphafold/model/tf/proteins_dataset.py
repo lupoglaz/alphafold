@@ -159,7 +159,6 @@ def np_to_tensor_dict(
   features_metadata = _make_features_metadata(features)
   tensor_dict = {k: tf.constant(v) for k, v in np_example.items()
                  if k in features_metadata}
-
   # Ensures shapes are as expected. Needed for setting size of empty features
   # e.g. when no template hits were found.
   tensor_dict = parse_reshape_logic(tensor_dict, features_metadata)

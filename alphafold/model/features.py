@@ -95,8 +95,15 @@ def np_example_to_features(np_example: FeatureDict,
         tensor_dict, cfg)
 
   tf_graph.finalize()
+#   for (k1, v1), (k2, v2) in zip(tensor_dict.items(), processed_batch.items()):
+#     print(k1, v1.shape, v2.shape)
+
+#   for k, v in processed_batch.items():
+#     print(k, v.shape)
 
   with tf.Session(graph=tf_graph) as sess:
     features = sess.run(processed_batch)
+  
+  print(features['aatype'])
 
   return {k: v for k, v in features.items() if v.dtype != 'O'}

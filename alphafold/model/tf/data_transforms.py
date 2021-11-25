@@ -20,6 +20,7 @@ from alphafold.model.tf import shape_placeholders
 from alphafold.model.tf import utils
 import numpy as np
 import tensorflow.compat.v1 as tf
+import sys
 
 # Pylint gets confused by the curry1 decorator because it changes the number
 #   of arguments to the function.
@@ -95,11 +96,13 @@ def fix_templates_aatype(protein):
 
 
 def correct_msa_restypes(protein):
+  
   """Correct MSA restype to have the same order as residue_constants."""
+  print('a')
   new_order_list = residue_constants.MAP_HHBLITS_AATYPE_TO_OUR_AATYPE
   new_order = tf.constant(new_order_list, dtype=protein['msa'].dtype)
   protein['msa'] = tf.gather(new_order, protein['msa'], axis=0)
-
+  tf.print("correct_msa_restypes", protein['msa'], output_stream=sys.stdout)
   perm_matrix = np.zeros((22, 22), dtype=np.float32)
   perm_matrix[range(len(new_order_list)), new_order_list] = 1.
 

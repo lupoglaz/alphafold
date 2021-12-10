@@ -9,8 +9,14 @@ from pathlib import Path
 
 from alphafold.model.modules import Attention, GlobalAttention, MSARowAttentionWithPairBias, MSAColumnAttention, MSAColumnGlobalAttention
 from alphafold.model.modules import TriangleAttention, TriangleMultiplication, OuterProductMean, Transition
-from alphafold.model.modules import EvoformerIteration, EmbeddingsAndEvoformer
+from alphafold.model.modules import EvoformerIteration, EmbeddingsAndEvoformer, AlphaFoldIteration
+
+from alphafold.model.modules import pseudo_beta_fn, dgram_from_positions, create_extra_msa_feature
 from alphafold.model import config
+
+from alphafold.model.folding import FoldIteration, InvariantPointAttention, MultiRigidSidechain
+from alphafold.model.folding import generate_affines, compute_renamed_ground_truth
+from alphafold.model.folding import backbone_loss, sidechain_loss, structural_violation_loss, find_structural_violations, compute_violation_metrics
 
 if __name__=='__main__':
 	model_config = config.model_config('model_1')
@@ -182,13 +188,39 @@ if __name__=='__main__':
 	feat['msa_feat'] = feat['msa_feat'][:num_msa, :num_seq, :]
 	feat['target_feat'] = feat['target_feat'][:num_seq, :]
 
-	for key in feat.keys():
-		print(key, feat[key].shape, feat[key].dtype)
+	# for key in feat.keys():
+	# 	print(key, feat[key].shape, feat[key].dtype)
 	
 	conf = model_config.model.embeddings_and_evoformer
-	test_wrapper('EmbeddingsAndEvoformer',
-		lambda batch:EmbeddingsAndEvoformer(conf, global_config)(batch, is_training=False)
-		)
+	conf.recycle_pos = False
+	conf.recycle_features = False
+	conf.template.enabled = False
+	conf.evoformer_num_block = 1
+	conf.extra_msa_stack_num_block = 1
+	global_config.deterministic = True
+	# test_wrapper('EmbeddingsAndEvoformer',
+	# 	lambda batch:EmbeddingsAndEvoformer(conf, global_config)(batch, is_training=False)
+	# 	)
+
+	# test_wrapper('AlphaFoldIteration',
+	# 	lambda batch:AlphaFoldIteration(conf, global_config)(batch, is_training=False)
+	# )
+	N = 200
+	M = 300
+	C = 64
+	Cp = 128
+	feat = {
+		'inputs_1d': jax.random.normal(rng, (N, C), dtype=jnp.float32),
+		'inputs_2d': jax.random.normal(rng, (N, M, Cp), dtype=jnp.float32),
+		'mask': jax.random.bernoulli(rng, 0.5, (N, 1)),
+		'affine': None
+	}
+	conf = model_config.model.heads.structure_module
+	test_wrapper('InvariantPointAttention',
+		lambda batch:InvariantPointAttention(conf, global_config, dist_epsilon=1e-8)(**batch)
+	)
+
+	
 
 	
 	

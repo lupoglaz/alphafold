@@ -1466,7 +1466,8 @@ class OuterProductMean(hk.Module):
         initializer='linear',
         name='right_projection')(
             act)
-
+	
+    
     if gc.zero_init:
       init_w = hk.initializers.Constant(0.0)
     else:
@@ -1616,7 +1617,7 @@ class EvoformerIteration(hk.Module):
         msa_mask,
         safe_key=next(sub_keys),
         pair_act=pair_act)
-
+    # return {'msa': msa_act, 'pair': pair_act}
     if not self.is_extra_msa:
       attn_mod = MSAColumnAttention(
           c.msa_column_attention, gc, name='msa_column_attention')
@@ -1772,7 +1773,8 @@ class EmbeddingsAndEvoformer(hk.Module):
       pair_activations += common_modules.Linear(
           c.pair_channel, name='pair_activiations')(
               rel_pos)
-
+	
+    
     # Embed templates into the pair activations.
     # Jumper et al. (2021) Suppl. Alg. 2 "Inference" lines 9-13
     if c.template.enabled:
@@ -1792,6 +1794,10 @@ class EmbeddingsAndEvoformer(hk.Module):
         c.extra_msa_channel,
         name='extra_msa_activations')(
             extra_msa_feat)
+	
+	#debug
+    # inp_msa_act = msa_activations
+    # inp_pair_act = pair_activations
 
     # Extra MSA Stack.
     # Jumper et al. (2021) Suppl. Alg. 18 "ExtraMsaStack"
@@ -1799,7 +1805,7 @@ class EmbeddingsAndEvoformer(hk.Module):
         'msa': extra_msa_activations,
         'pair': pair_activations,
     }
-
+    
     extra_msa_stack_iteration = EvoformerIteration(
         c.evoformer, gc, is_extra_msa=True, name='extra_msa_stack')
 
@@ -1905,13 +1911,19 @@ class EmbeddingsAndEvoformer(hk.Module):
         evoformer_fn)
     evoformer_output, safe_key = evoformer_stack(
         (evoformer_input, safe_key))
-
+    
+        
     msa_activations = evoformer_output['msa']
     pair_activations = evoformer_output['pair']
+	
 
     single_activations = common_modules.Linear(
         c.seq_channel, name='single_activations')(
             msa_activations[0])
+    #debug
+	# single_activations = common_modules.Linear(
+    #     c.seq_channel, name='single_activations')(
+    #         inp_msa_act)
 
     num_sequences = batch['msa_feat'].shape[0]
     output = {
@@ -1920,6 +1932,14 @@ class EmbeddingsAndEvoformer(hk.Module):
         # Crop away template rows such that they are not used in MaskedMsaHead.
         'msa': msa_activations[:num_sequences, :, :],
         'msa_first_row': msa_activations[0],
+		#extra debug:
+		# 'inp_msa_act': inp_msa_act,
+		# 'inp_pair_act': inp_pair_act,
+		# 'mask_2d': mask_2d,
+		# 'extra_msa_act': extra_msa_activations,
+		# 'single_act': single_activations,
+		# 'extra_msa_output_msa': extra_msa_output['msa'],
+		# 'extra_msa_output_pair': extra_msa_output['pair']
     }
 
     return output

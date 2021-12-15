@@ -14,10 +14,6 @@ from alphafold.model.modules import EvoformerIteration, EmbeddingsAndEvoformer, 
 from alphafold.model.modules import pseudo_beta_fn, dgram_from_positions, create_extra_msa_feature
 from alphafold.model import config
 
-from alphafold.model.folding import FoldIteration, InvariantPointAttention, MultiRigidSidechain
-from alphafold.model.folding import generate_affines, compute_renamed_ground_truth
-from alphafold.model.folding import backbone_loss, sidechain_loss, structural_violation_loss, find_structural_violations, compute_violation_metrics
-
 if __name__=='__main__':
 	model_config = config.model_config('model_1')
 	model_config.model.global_config.zero_init = False

@@ -186,6 +186,10 @@ class InvariantPointAttention(hk.Module):
         'trainable_point_weights', shape=[num_head],
         # softplus^{-1} (1)
         init=hk.initializers.Constant(np.log(np.exp(1.) - 1.))))
+    # trainable_point_weights = hk.get_parameter(
+    #     'trainable_point_weights', shape=[num_head],
+    #     # softplus^{-1} (1)
+    #     init=hk.initializers.Constant(np.log(np.exp(1.) - 1.)))
     point_weights *= jnp.expand_dims(trainable_point_weights, axis=1)
 
     v_point = [jnp.swapaxes(x, -2, -3) for x in v_point]
@@ -272,8 +276,24 @@ class InvariantPointAttention(hk.Module):
 
     final_act = jnp.concatenate(output_features, axis=-1)
 
-    return common_modules.Linear(
-        num_output,
+    # debug = {'final': common_modules.Linear(
+    #     num_output,
+    #     initializer=final_init,
+    #     name='output_projection')(final_act),
+	# 	'attn_logits': attn_logits,
+	# 	'attn_qk_scalar': attn_qk_scalar,
+	# 	'attn_qk_point': attn_qk_point,
+	# 	'point_weights': point_weights,
+	# 	'trainable_point_weights': trainable_point_weights,
+	# 	'k_scalar': k_scalar,
+	# 	'v_scalar': v_scalar,
+	# 	'k_point': k_point,
+	# 	'v_point': v_point,
+	# 	'dist2': dist2,
+	# 	'kv_point_global':kv_point_global,
+	# 	'kv_point_local': kv_point_local}
+
+    return common_modules.Linear(num_output,
         initializer=final_init,
         name='output_projection')(final_act)
 

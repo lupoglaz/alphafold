@@ -525,7 +525,8 @@ def torsion_angles_to_frames(
   all_frames_to_global = r3.rigids_mul_rigids(
       jax.tree_map(lambda x: x[:, None], backb_to_global),
       all_frames_to_backb)
-
+  
+  return all_frames
   return all_frames_to_global
 
 

@@ -91,7 +91,7 @@ if __name__=='__main__':
 	def test_torsion_angles_to_frames(activations, aatype, torsion_angles_sin_cos):
 		rigs = r3.rigids_from_quataffine(QuatAffine.from_tensor(activations))
 		res = torsion_angles_to_frames(aatype=aatype, backb_to_global=rigs, torsion_angles_sin_cos=torsion_angles_sin_cos)
-		res = r3.rigids_to_tensor_flat9(res)
+		res = r3.rigids_to_tensor_flat12(res)
 		return res
 
 	def test_frames_and_literature_positions_to_atom14_pos(activations, aatype, torsion_angles_sin_cos):
@@ -101,6 +101,6 @@ if __name__=='__main__':
 		res = r3.vecs_to_tensor(res)
 		return res
 
-	# test_wrapper('test_torsion_angles_to_frames', test_torsion_angles_to_frames, activations, aatype, torsion_angles_sin_cos)
+	test_wrapper('test_torsion_angles_to_frames', test_torsion_angles_to_frames, activations, aatype, torsion_angles_sin_cos)
 	# test_wrapper('test_frames_and_literature_positions_to_atom14_pos', test_frames_and_literature_positions_to_atom14_pos, 
 	# 				activations, aatype, torsion_angles_sin_cos)

@@ -24,10 +24,17 @@ if __name__=='__main__':
 
 	rng = jax.random.PRNGKey(42)
 
-	def test_wrapper_affine(filename, _forward_fn, activations, affine_field_name='affine'):
-		qa = QuatAffine.from_tensor(activations)
-		feat_this = {**feat, affine_field_name:qa}
-		
+	def test_wrapper_affine(filename, _forward_fn, activations, affine_field_name='affine', output_convert=False):
+		if not affine_field_name is None:
+			qa = QuatAffine.from_tensor(activations)
+			if affine_field_name in feat.keys():
+				feat_this = feat
+				feat_this[affine_field_name]['affine'] = qa
+			else:
+				feat_this = {**feat, affine_field_name:qa}
+		else:
+			feat_this = feat
+				
 		apply = hk.transform(_forward_fn).apply
 		init = hk.transform(_forward_fn).init
 		
@@ -35,10 +42,23 @@ if __name__=='__main__':
 		params = hk.data_structures.to_mutable_dict(params)
 		res = apply(params, rng, feat_this)
 		
-		feat_save = {'activations':activations, **feat}
-		res_path = Path('Debug')/(f'{filename}.pkl')
-		with open(res_path, 'wb') as f:
-			pickle.dump((feat_save, params, res), f)
+		if output_convert:
+			if 'atom_pos' in res:
+				res['atom_pos'] = r3.vecs_to_tensor(res['atom_pos'])
+				res['frames'] = r3.rigids_to_tensor_flat12(res['frames'])
+			else:
+				res[1]['sc']['atom_pos'] = r3.vecs_to_tensor(res[1]['sc']['atom_pos'])
+				res[1]['sc']['frames'] = r3.rigids_to_tensor_flat12(res[1]['sc']['frames'])
+		
+		if not affine_field_name is None:
+			feat_save = {'activations':activations, **feat}
+			res_path = Path('Debug')/(f'{filename}.pkl')
+			with open(res_path, 'wb') as f:
+				pickle.dump((feat_save, params, res), f)
+		else:
+			res_path = Path('Debug')/(f'{filename}.pkl')
+			with open(res_path, 'wb') as f:
+				pickle.dump((feat_this, params, res), f)
 
 	batch_size = 16
 	tensor = np.random.rand(batch_size, 7)
@@ -63,19 +83,35 @@ if __name__=='__main__':
 	# 	lambda batch:InvariantPointAttention(conf, global_config, dist_epsilon=1e-8)(**batch),
 	# 	activations=activations
 	# )
+	# feat = {
+	# 	'representations_list': [jax.random.normal(rng, (N, Cp), dtype=jnp.float32), jax.random.normal(rng, (N, Cp), dtype=jnp.float32)],
+	# 	'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32),	
+	# }
+	# conf = model_config.model.heads.structure_module.sidechain
+	# test_wrapper_affine('MultiRigidSidechain',
+	# 	lambda batch:MultiRigidSidechain(conf, global_config)(**batch),
+	# 	activations=activations,
+	# 	output_convert = True
+	# )
 	
 	##TODO
-	# feat = {
-	# 	'activations': {'act': jax.random.normal(rng, (N, 7), dtype=jnp.float32), 'affine': None},
-	# 	'sequence_mask': jnp.asarray(jax.random.bernoulli(rng, 0.5, (N, 1)), dtype=np.float32),
-	# 	'is_training': False,
-	# 	'initial_act': jax.random.normal(rng, (N, 7), dtype=jnp.float32)
-	# }
-	# test_wrapper_affine('FoldIteration',
-	# 	lambda batch:FoldIteration(conf, global_config)(**batch),
-	# 	activations=activations, affine_field_name='update_affine'
-	# )
+	feat = {
+		'activations': {'act': jax.random.normal(rng, (N, 384), dtype=jnp.float32), 'affine': np.random.rand(N, 7)},
+		'sequence_mask': jnp.asarray(jax.random.bernoulli(rng, 0.5, (N, 1)), dtype=np.float32),
+		'update_affine': True,
+		'is_training': False,
+		'initial_act': jax.random.normal(rng, (N, 384), dtype=jnp.float32),
+		'static_feat_2d': jax.random.normal(rng, (N, M, Cp), dtype=jnp.float32),
+		'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32)
+	}
+	test_wrapper_affine('FoldIteration',
+		lambda batch:FoldIteration(conf, global_config)(**batch),
+		activations=activations, affine_field_name=None, output_convert=True
+	)
 
+
+
+	# FUNCTION TESTS
 	def test_wrapper(filename, fn, *args):
 		res = fn(*args)			
 		res_path = Path('Debug')/(f'{filename}.pkl')
@@ -101,6 +137,6 @@ if __name__=='__main__':
 		res = r3.vecs_to_tensor(res)
 		return res
 
-	test_wrapper('test_torsion_angles_to_frames', test_torsion_angles_to_frames, activations, aatype, torsion_angles_sin_cos)
+	# test_wrapper('test_torsion_angles_to_frames', test_torsion_angles_to_frames, activations, aatype, torsion_angles_sin_cos)
 	# test_wrapper('test_frames_and_literature_positions_to_atom14_pos', test_frames_and_literature_positions_to_atom14_pos, 
 	# 				activations, aatype, torsion_angles_sin_cos)

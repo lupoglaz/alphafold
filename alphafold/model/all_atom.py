@@ -526,7 +526,6 @@ def torsion_angles_to_frames(
       jax.tree_map(lambda x: x[:, None], backb_to_global),
       all_frames_to_backb)
   
-  return all_frames
   return all_frames_to_global
 
 

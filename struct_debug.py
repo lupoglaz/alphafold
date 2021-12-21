@@ -8,7 +8,7 @@ import pickle
 from pathlib import Path
 
 from alphafold.model.quat_affine import QuatAffine
-from alphafold.model.folding import FoldIteration, InvariantPointAttention, MultiRigidSidechain
+from alphafold.model.folding import FoldIteration, InvariantPointAttention, MultiRigidSidechain, StructureModule
 from alphafold.model.folding import generate_affines, compute_renamed_ground_truth
 from alphafold.model.folding import backbone_loss, sidechain_loss, structural_violation_loss, find_structural_violations, compute_violation_metrics
 from alphafold.model import config
@@ -46,9 +46,11 @@ if __name__=='__main__':
 			if 'atom_pos' in res:
 				res['atom_pos'] = r3.vecs_to_tensor(res['atom_pos'])
 				res['frames'] = r3.rigids_to_tensor_flat12(res['frames'])
-			else:
+			elif isinstance(res, tuple):
 				res[1]['sc']['atom_pos'] = r3.vecs_to_tensor(res[1]['sc']['atom_pos'])
 				res[1]['sc']['frames'] = r3.rigids_to_tensor_flat12(res[1]['sc']['frames'])
+			else:
+				raise(NotImplementedError())
 		
 		if not affine_field_name is None:
 			feat_save = {'activations':activations, **feat}
@@ -94,19 +96,32 @@ if __name__=='__main__':
 	# 	output_convert = True
 	# )
 	
-	##TODO
-	feat = {
-		'activations': {'act': jax.random.normal(rng, (N, 384), dtype=jnp.float32), 'affine': np.random.rand(N, 7)},
-		'sequence_mask': jnp.asarray(jax.random.bernoulli(rng, 0.5, (N, 1)), dtype=np.float32),
-		'update_affine': True,
-		'is_training': False,
-		'initial_act': jax.random.normal(rng, (N, 384), dtype=jnp.float32),
-		'static_feat_2d': jax.random.normal(rng, (N, M, Cp), dtype=jnp.float32),
-		'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32)
-	}
-	test_wrapper_affine('FoldIteration',
-		lambda batch:FoldIteration(conf, global_config)(**batch),
-		activations=activations, affine_field_name=None, output_convert=True
+	
+	# feat = {
+	# 	'activations': {'act': jax.random.normal(rng, (N, 384), dtype=jnp.float32), 'affine': np.random.rand(N, 7)},
+	# 	'sequence_mask': jnp.asarray(jax.random.bernoulli(rng, 0.5, (N, 1)), dtype=np.float32),
+	# 	'update_affine': True,
+	# 	'is_training': False,
+	# 	'initial_act': jax.random.normal(rng, (N, 384), dtype=jnp.float32),
+	# 	'static_feat_2d': jax.random.normal(rng, (N, M, Cp), dtype=jnp.float32),
+	# 	'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32)
+	# }
+	# conf = model_config.model.heads.structure_module
+	# test_wrapper_affine('FoldIteration',
+	# 	lambda batch:FoldIteration(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=True
+	# )
+	
+	res_path = Path('Debug')/Path('EmbeddingsAndEvoformer.pkl')
+	with open(res_path, 'rb') as f:
+		feat, params, res = pickle.load(f)
+
+	conf = model_config.model.heads.structure_module
+	
+	feat = {'representations': res, 'batch': feat, 'is_training':False}
+	test_wrapper_affine('StructureModule',
+		lambda batch:StructureModule(conf, global_config, compute_loss=False)(**batch),
+		activations=activations, affine_field_name=None, output_convert=False
 	)
 
 

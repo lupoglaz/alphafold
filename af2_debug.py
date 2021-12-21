@@ -60,8 +60,8 @@ if __name__=='__main__':
 		params = hk.data_structures.to_mutable_dict(params)
 		
 		res = apply(params, rng, feat)
-
-		res_path = Path('Debug')/(f'{filename}.pkl')
+		
+		res_path = Path('Debug')/Path(f'{filename}.pkl')
 		with open(res_path, 'wb') as f:
 			pickle.dump((feat, params, res), f)
 
@@ -201,20 +201,7 @@ if __name__=='__main__':
 	# test_wrapper('AlphaFoldIteration',
 	# 	lambda batch:AlphaFoldIteration(conf, global_config)(batch, is_training=False)
 	# )
-	N = 200
-	M = 300
-	C = 64
-	Cp = 128
-	feat = {
-		'inputs_1d': jax.random.normal(rng, (N, C), dtype=jnp.float32),
-		'inputs_2d': jax.random.normal(rng, (N, M, Cp), dtype=jnp.float32),
-		'mask': jax.random.bernoulli(rng, 0.5, (N, 1)),
-		'affine': None
-	}
-	conf = model_config.model.heads.structure_module
-	test_wrapper('InvariantPointAttention',
-		lambda batch:InvariantPointAttention(conf, global_config, dist_epsilon=1e-8)(**batch)
-	)
+	
 
 	
 

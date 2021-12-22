@@ -9,6 +9,7 @@ from pathlib import Path
 
 from alphafold.model.quat_affine import QuatAffine
 from alphafold.model.folding import FoldIteration, InvariantPointAttention, MultiRigidSidechain, StructureModule
+from alphafold.model.modules import PredictedLDDTHead, ExperimentallyResolvedHead, MaskedMsaHead, DistogramHead, PredictedAlignedErrorHead
 from alphafold.model.folding import generate_affines, compute_renamed_ground_truth
 from alphafold.model.folding import backbone_loss, sidechain_loss, structural_violation_loss, find_structural_violations, compute_violation_metrics
 from alphafold.model import config
@@ -112,18 +113,60 @@ if __name__=='__main__':
 	# 	activations=activations, affine_field_name=None, output_convert=True
 	# )
 	
-	res_path = Path('Debug')/Path('EmbeddingsAndEvoformer.pkl')
-	with open(res_path, 'rb') as f:
-		feat, params, res = pickle.load(f)
 
-	conf = model_config.model.heads.structure_module
+	# res_path = Path('Debug')/Path('EmbeddingsAndEvoformer.pkl')
+	# with open(res_path, 'rb') as f:
+	# 	feat, params, res = pickle.load(f)
+	# conf = model_config.model.heads.structure_module
+	# feat = {'representations': res, 'batch': feat, 'is_training':False}
+	# test_wrapper_affine('StructureModule',
+	# 	lambda batch:StructureModule(conf, global_config, compute_loss=False)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
+
 	
-	feat = {'representations': res, 'batch': feat, 'is_training':False}
-	test_wrapper_affine('StructureModule',
-		lambda batch:StructureModule(conf, global_config, compute_loss=False)(**batch),
+	
+	# with open(Path('Debug')/Path('StructureModule.pkl'), 'rb') as f:
+	# 	feat, params, res_struct = pickle.load(f)
+	# feat['representations'].update(res_struct['representations'])
+	# conf = model_config.model.heads.predicted_lddt
+	# test_wrapper_affine('PredictedLDDTHead',
+	# 	lambda batch:PredictedLDDTHead(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
+
+	# with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
+	# 	feat, params, res_struct = pickle.load(f)
+	# conf = model_config.model.heads.predicted_lddt
+	# test_wrapper_affine('ExperimentallyResolvedHead',
+	# 	lambda batch:ExperimentallyResolvedHead(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
+
+	# with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
+	# 	feat, params, res_struct = pickle.load(f)
+	# conf = model_config.model.heads.masked_msa
+	# test_wrapper_affine('MaskedMSAHead',
+	# 	lambda batch:MaskedMsaHead(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
+
+	# with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
+	# 	feat, params, res_struct = pickle.load(f)
+	# conf = model_config.model.heads.distogram
+	# test_wrapper_affine('DistogramHead',
+	# 	lambda batch:DistogramHead(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
+
+	with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
+		feat, params, res_struct = pickle.load(f)
+	conf = model_config.model.heads.predicted_aligned_error
+	test_wrapper_affine('PredictedAlignedErrorHead',
+		lambda batch:PredictedAlignedErrorHead(conf, global_config)(**batch),
 		activations=activations, affine_field_name=None, output_convert=False
 	)
-
+	
 
 
 	# FUNCTION TESTS

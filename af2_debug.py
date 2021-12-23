@@ -9,7 +9,7 @@ from pathlib import Path
 
 from alphafold.model.modules import Attention, GlobalAttention, MSARowAttentionWithPairBias, MSAColumnAttention, MSAColumnGlobalAttention
 from alphafold.model.modules import TriangleAttention, TriangleMultiplication, OuterProductMean, Transition
-from alphafold.model.modules import EvoformerIteration, EmbeddingsAndEvoformer, AlphaFoldIteration
+from alphafold.model.modules import EvoformerIteration, EmbeddingsAndEvoformer, AlphaFoldIteration, AlphaFold
 
 from alphafold.model.modules import pseudo_beta_fn, dgram_from_positions, create_extra_msa_feature
 from alphafold.model import config
@@ -198,10 +198,47 @@ if __name__=='__main__':
 	# 	lambda batch:EmbeddingsAndEvoformer(conf, global_config)(batch, is_training=False)
 	# 	)
 
-	# test_wrapper('AlphaFoldIteration',
-	# 	lambda batch:AlphaFoldIteration(conf, global_config)(batch, is_training=False)
-	# )
+
+	conf = model_config.model
+	conf.embeddings_and_evoformer.recycle_pos = False
+	conf.embeddings_and_evoformer.recycle_features = False
+	conf.embeddings_and_evoformer.template.enabled = False
+	conf.embeddings_and_evoformer.evoformer_num_block = 1
+	conf.embeddings_and_evoformer.extra_msa_stack_num_block = 1
+	conf.num_recycle = 0
+	conf.resample_msa_in_recycling = False
+	global_config.deterministic = True
+
+	# non_ensembled_batch = feat
+	# ensembled_batch = {k: jnp.expand_dims(v, axis=0) for k, v in feat.items()}
+
+	# fwd = lambda x,y: AlphaFoldIteration(conf, global_config)(x, y, is_training=False)
+	# apply = hk.transform(fwd).apply
+	# init = hk.transform(fwd).init
+		
+	# params = init(rng, ensembled_batch, non_ensembled_batch)
+	# params = hk.data_structures.to_mutable_dict(params)
 	
+	# res = apply(params, rng, ensembled_batch, non_ensembled_batch)
+		
+	# res_path = Path('Debug')/Path(f'AlphaFoldIteration.pkl')
+	# with open(res_path, 'wb') as f:
+	# 	pickle.dump((ensembled_batch, non_ensembled_batch, params, res), f)	
+
+	batch = {k: jnp.expand_dims(v, axis=0) for k, v in feat.items()}
+	
+	fwd = lambda x: AlphaFold(conf)(x, is_training=False)
+	apply = hk.transform(fwd).apply
+	init = hk.transform(fwd).init
+		
+	params = init(rng, batch)
+	params = hk.data_structures.to_mutable_dict(params)
+	
+	res = apply(params, rng, batch)
+		
+	res_path = Path('Debug')/Path(f'AlphaFold.pkl')
+	with open(res_path, 'wb') as f:
+		pickle.dump((batch, params, res), f)	
 
 	
 

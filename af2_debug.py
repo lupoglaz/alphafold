@@ -106,12 +106,19 @@ if __name__=='__main__':
 	# 		TriangleAttention(conf, global_config)
 	# 		(pair_act=batch['pair_act'], pair_mask=batch['pair_mask'], is_training=False)
 	# 	)
-	# conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing
-	# test_wrapper('TriangleMultiplication',
-	# 	lambda batch:
-	# 		TriangleMultiplication(conf, global_config)
-	# 		(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
-	# 	)
+	conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing
+	test_wrapper('TriangleMultiplicationOutgoing',
+		lambda batch:
+			TriangleMultiplication(conf, global_config)
+			(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
+		)
+
+	conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming
+	test_wrapper('TriangleMultiplicationIncoming',
+		lambda batch:
+			TriangleMultiplication(conf, global_config)
+			(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
+		)
 
 	# feat['msa_act'] = jax.random.normal(rng, (N_seq, N_res, 16), dtype=jnp.float32)
 	# feat['msa_mask'] = jax.random.bernoulli(rng, 0.5, (N_seq, N_res))
@@ -225,20 +232,20 @@ if __name__=='__main__':
 	# with open(res_path, 'wb') as f:
 	# 	pickle.dump((ensembled_batch, non_ensembled_batch, params, res), f)	
 
-	batch = {k: jnp.expand_dims(v, axis=0) for k, v in feat.items()}
+	# batch = {k: jnp.expand_dims(v, axis=0) for k, v in feat.items()}
 	
-	fwd = lambda x: AlphaFold(conf)(x, is_training=False)
-	apply = hk.transform(fwd).apply
-	init = hk.transform(fwd).init
+	# fwd = lambda x: AlphaFold(conf)(x, is_training=False)
+	# apply = hk.transform(fwd).apply
+	# init = hk.transform(fwd).init
 		
-	params = init(rng, batch)
-	params = hk.data_structures.to_mutable_dict(params)
+	# params = init(rng, batch)
+	# params = hk.data_structures.to_mutable_dict(params)
 	
-	res = apply(params, rng, batch)
+	# res = apply(params, rng, batch)
 		
-	res_path = Path('Debug')/Path(f'AlphaFold.pkl')
-	with open(res_path, 'wb') as f:
-		pickle.dump((batch, params, res), f)	
+	# res_path = Path('Debug')/Path(f'AlphaFold.pkl')
+	# with open(res_path, 'wb') as f:
+	# 	pickle.dump((batch, params, res), f)	
 
 	
 

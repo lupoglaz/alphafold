@@ -159,13 +159,13 @@ if __name__=='__main__':
 	# 	activations=activations, affine_field_name=None, output_convert=False
 	# )
 
-	with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
-		feat, params, res_struct = pickle.load(f)
-	conf = model_config.model.heads.predicted_aligned_error
-	test_wrapper_affine('PredictedAlignedErrorHead',
-		lambda batch:PredictedAlignedErrorHead(conf, global_config)(**batch),
-		activations=activations, affine_field_name=None, output_convert=False
-	)
+	# with open(Path('Debug')/Path('PredictedLDDTHead.pkl'), 'rb') as f:
+	# 	feat, params, res_struct = pickle.load(f)
+	# conf = model_config.model.heads.predicted_aligned_error
+	# test_wrapper_affine('PredictedAlignedErrorHead',
+	# 	lambda batch:PredictedAlignedErrorHead(conf, global_config)(**batch),
+	# 	activations=activations, affine_field_name=None, output_convert=False
+	# )
 	
 
 

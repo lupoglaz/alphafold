@@ -82,20 +82,21 @@ if __name__=='__main__':
 		
 	}
 	conf = model_config.model.heads.structure_module
-	# test_wrapper_affine('InvariantPointAttention',
-	# 	lambda batch:InvariantPointAttention(conf, global_config, dist_epsilon=1e-8)(**batch),
-	# 	activations=activations
-	# )
-	# feat = {
-	# 	'representations_list': [jax.random.normal(rng, (N, Cp), dtype=jnp.float32), jax.random.normal(rng, (N, Cp), dtype=jnp.float32)],
-	# 	'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32),	
-	# }
-	# conf = model_config.model.heads.structure_module.sidechain
-	# test_wrapper_affine('MultiRigidSidechain',
-	# 	lambda batch:MultiRigidSidechain(conf, global_config)(**batch),
-	# 	activations=activations,
-	# 	output_convert = True
-	# )
+	test_wrapper_affine('InvariantPointAttention',
+		lambda batch:InvariantPointAttention(conf, global_config, dist_epsilon=1e-8)(**batch),
+		activations=activations
+	)
+	sys.exit()
+	feat = {
+		'representations_list': [jax.random.normal(rng, (N, Cp), dtype=jnp.float32), jax.random.normal(rng, (N, Cp), dtype=jnp.float32)],
+		'aatype': jax.random.randint(rng, (N, ), minval=0, maxval=21, dtype=np.int32),	
+	}
+	conf = model_config.model.heads.structure_module.sidechain
+	test_wrapper_affine('MultiRigidSidechain',
+		lambda batch:MultiRigidSidechain(conf, global_config)(**batch),
+		activations=activations,
+		output_convert = True
+	)
 	
 	
 	# feat = {

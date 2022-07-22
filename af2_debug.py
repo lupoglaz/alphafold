@@ -85,8 +85,8 @@ if __name__=='__main__':
 	# 		MSARowAttentionWithPairBias(conf, global_config)
 	# 		(msa_act=batch['msa_act'], msa_mask=batch['msa_mask'], pair_act=batch['pair_act'], is_training=False)
 	# 	)
-
-	# conf = model_config.model.embeddings_and_evoformer.evoformer.msa_column_attention
+	
+	conf = model_config.model.embeddings_and_evoformer.evoformer.msa_column_attention
 	# test_wrapper('MSAColumnAttention',
 	# 	lambda batch:
 	# 		MSAColumnAttention(conf, global_config)
@@ -106,19 +106,19 @@ if __name__=='__main__':
 	# 		TriangleAttention(conf, global_config)
 	# 		(pair_act=batch['pair_act'], pair_mask=batch['pair_mask'], is_training=False)
 	# 	)
-	conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing
-	test_wrapper('TriangleMultiplicationOutgoing',
-		lambda batch:
-			TriangleMultiplication(conf, global_config)
-			(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
-		)
+	# conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_outgoing
+	# test_wrapper('TriangleMultiplicationOutgoing',
+	# 	lambda batch:
+	# 		TriangleMultiplication(conf, global_config)
+	# 		(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
+	# 	)
 
-	conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming
-	test_wrapper('TriangleMultiplicationIncoming',
-		lambda batch:
-			TriangleMultiplication(conf, global_config)
-			(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
-		)
+	# conf = model_config.model.embeddings_and_evoformer.evoformer.triangle_multiplication_incoming
+	# test_wrapper('TriangleMultiplicationIncoming',
+	# 	lambda batch:
+	# 		TriangleMultiplication(conf, global_config)
+	# 		(act=batch['pair_act'], mask=batch['pair_mask'], is_training=False)
+	# 	)
 
 	# feat['msa_act'] = jax.random.normal(rng, (N_seq, N_res, 16), dtype=jnp.float32)
 	# feat['msa_mask'] = jax.random.bernoulli(rng, 0.5, (N_seq, N_res))
@@ -129,13 +129,13 @@ if __name__=='__main__':
 	# 		(act=batch['msa_act'], mask=batch['msa_mask'], is_training=False)
 	# 	)
 
-	# conf = model_config.model.embeddings_and_evoformer.evoformer.pair_transition
-	# test_wrapper('Transition',
-	# 	lambda batch:
-	# 		Transition(conf, global_config)
-	# 		(act=batch['seq_act'], mask=batch['seq_mask'], is_training=False)
-	# 	)
-
+	conf = model_config.model.embeddings_and_evoformer.evoformer.pair_transition
+	test_wrapper('Transition',
+		lambda batch:
+			Transition(conf, global_config)
+			(act=batch['seq_act'], mask=batch['seq_mask'], is_training=False)
+		)
+	sys.exit()
 	# conf = model_config.model.embeddings_and_evoformer.evoformer
 	# test_wrapper('EvoformerIteration1',
 	# 	lambda batch:
